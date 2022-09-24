@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
+from dataclasses import MISSING
 import itertools
 import logging
 import random
@@ -73,6 +74,9 @@ class Client:
         the player was moved via the failover mechanism, the player will still move back to the original
         node when it becomes available. This behaviour can be avoided in custom player implementations by
         setting ``self._original_node`` to ``None`` in the :func:`BasePlayer.change_node` function.
+    extras: Optional[:class:`dict`]
+        A dictionary that can be used to store extraneous data.
+        The library will not touch any values or keys within this dictionary.
 
     Attributes
     ----------
@@ -84,7 +88,7 @@ class Client:
     _event_hooks = defaultdict(list)
 
     def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
-                 connect_back: bool = False):
+                 connect_back: bool = False, extras: dict = MISSING):
         if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
             # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
             raise TypeError('user_id must be either an int or str (not {}). If the type is None, '
@@ -95,6 +99,7 @@ class Client:
         self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
         self._user_id: str = str(user_id)
         self._connect_back: bool = connect_back
+        self.extras = extras
         self.node_manager: NodeManager = NodeManager(self, regions)
         self.player_manager: PlayerManager = PlayerManager(self, player)
         self.sources: Set[Source] = set()
